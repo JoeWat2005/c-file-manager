@@ -12,6 +12,39 @@ char new_file_name[64];
 char buffer[5000];
 char line[256];
 
+void record_change(const char *operation, const char *file_name){
+  FILE *log_file = fopen("change_log.txt", "a");
+  if (log_file){
+    int line_count = count_lines_in_file(file_name);
+    if (line_count >= 0){
+      fprintf(log_file, "%s: %s, %d lines\n", operation, file_name, line_count);
+    }
+    else{
+      fprintf(log_file, "%s: %s (File does not exist or has been deleted)\n", operation, file_name);
+    }
+    fclose(log_file);
+  }
+  else{
+    perror("Error opening change log file");
+  }
+}
+//function for recording changes to files
+
+void show_change_log(){
+  FILE *log_file = fopen("change_log.txt", "r");
+  if (log_file){
+    printf("Change Log: \n");
+    while (fgets(buffer, sizeof(buffer), log_file)){
+      printf("%s", buffer);
+    }
+    fclose(log_file);
+  }
+  else{
+    perror("No change log found. No operations have been recorded yet.");
+  }
+}
+//function for displaying the change log
+
 int check_if_file_exists(const char *file_name){
   FILE *file = fopen(file_name, "r");
   if (file){
@@ -35,6 +68,7 @@ void create_new_file(){
     if (file){
       fclose(file);
       printf("File '%s' created successfully.\n", file_name);
+      record_change("Created file", file_name);
     }
     else{
       perror("Error creating file");
@@ -51,6 +85,7 @@ void delete_file(){
   if (check_if_file_exists(file_name)){
     if (remove(file_name) == 0){
       printf("File '%s' deleted successfully.\n", file_name);
+      record_change("Deleted file", file_name);
     } 
     else{
       perror("Error deleting file");
@@ -112,6 +147,7 @@ void copy_file(){
   fclose(file);
   fclose(new_file);
   printf("File '%s' copied to '%s' successfully.\n", file_name, new_file_name);
+  record_change("Copied file", new_file_name);
 }
 //function for copying a file
 
@@ -212,6 +248,7 @@ void delete_line_from_file(){
   remove(file_name);
   rename("temp.txt", file_name);
   printf("Line %d deleted from file '%s'.\n", line_number, file_name);
+  record_change("Deleted line from file", file_name);
 }
 //function for deleting specific line in a file
 
@@ -228,6 +265,7 @@ void append_line_to_file(){
     fprintf(file, "%s\n", buffer);
     fclose(file);
     printf("Line appended to file '%s'.\n", file_name);
+    record_change("Appended line to file", file_name);
   } 
   else{
     perror("Error opening file");
@@ -266,6 +304,7 @@ void insert_line_into_file(){
   remove(file_name);
   rename("temp.txt", file_name);
   printf("Line successsfully inserted into file '%s'.\n", file_name);
+  record_change("Inserted line into file", file_name);
 }
 //function handling specific line inserts into a file
 
@@ -293,6 +332,7 @@ void rename_file(){
   }
   rename(file_name, new_file_name);
   printf("File '%s' renamed to '%s'.\n", file_name, new_file_name);
+  record_change("Renamed file", new_file_name);
 }
 //function for renaming files
 
@@ -310,10 +350,13 @@ int main(){
     printf("8. Show a specific line in a file.\n");
     printf("9. Show change log (not implemented)\n");
     printf("10. Show number of lines in a file.\n");
-    printf("11. Exit\n");
-    printf("Enter your choice (1-11) > ");
+    printf("11. List files in working directory.\n");
+    printf("12. Rename a file in working directory.\n");
+    printf("13. Display program change log.\n");
+    printf("14. Exit\n");
+    printf("Enter your choice (1-14) > ");
     if (scanf("%d", &choice) != 1) {
-      printf("Invalid input! Please enter a number between 1 and 11.\n");
+      printf("Invalid input! Please enter a number between 1 and 14.\n");
       while (getchar() != '\n');
       continue;
     }
@@ -350,11 +393,15 @@ int main(){
       break;
     case 12:
       rename_file();
+      break;
     case 13:
+      show_change_log();
+      break;
+    case 14:
       printf("Exiting Program...\n");
       return 0;
     default:
-      printf("Please enter a number between 1 and 13.\n");
+      printf("Please enter a number between 1 and 14.\n");
       break;
     }
   }
