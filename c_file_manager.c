@@ -233,7 +233,6 @@ void apline_f(){
     FILE *selected_file = fopen(file_n, "a");
     if (selected_file){
         printf("Enter line to append: ");
-        getchar();
         fgets(big_buf, sizeof(big_buf), stdin);
         big_buf[strcspn(big_buf, "\n")] = 0;
         fprintf(selected_file, "%s\n", big_buf);
